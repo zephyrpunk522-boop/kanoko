@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="养护记录">
+<meta name="theme-color" content="#2f6b4f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>养护记录 · 浇花 & 施肥</title>
+<style>
+:root{
+  --bg:#f4f7f3; --card:#fff; --primary:#2f6b4f; --fert:#8b6914; --fert2:#567c8a;
+  --accent:#e888b0; --text:#243029; --muted:#8a9a90; --line:#e6ece7;
+  --shadow:0 2px 10px rgba(40,70,55,.06);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;background:var(--bg);color:var(--text);}
+header{position:sticky;top:0;z-index:20;background:rgba(244,247,243,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:calc(env(safe-area-inset-top) + 12px) 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);}
+.h-title{font-size:19px;font-weight:700;color:var(--primary);}
+.h-year{display:flex;align-items:center;gap:6px;background:var(--card);border-radius:20px;padding:4px 4px;box-shadow:var(--shadow);}
+.h-year button{border:none;background:none;font-size:20px;color:var(--primary);width:30px;height:30px;border-radius:50%;line-height:1;}
+.h-year button:active{background:var(--line);}
+#yearLabel{font-weight:700;min-width:50px;text-align:center;font-size:15px;}
+main{padding:12px 14px calc(env(safe-area-inset-bottom) + 84px);max-width:520px;margin:0 auto;}
+.month-stat{font-size:13px;color:var(--muted);margin:4px 4px 10px;}
+.month-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch;}
+.month-tabs::-webkit-scrollbar{display:none;}
+.mtab{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--muted);padding:7px 14px;border-radius:18px;font-size:14px;font-weight:600;}
+.mtab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.day-list{display:flex;flex-direction:column;gap:8px;}
+.day{display:flex;gap:12px;background:var(--card);border-radius:14px;padding:12px;box-shadow:var(--shadow);align-items:flex-start;}
+.day:active{transform:scale(.992);}
+.day.today{border:1.5px solid var(--accent);}
+.dleft{flex:0 0 64px;}
+.dd{font-size:15px;font-weight:700;line-height:1.2;}
+.dw{font-size:12px;color:var(--muted);margin-top:3px;}
+.dright{flex:1;display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:24px;}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:4px 9px;border-radius:12px;background:color-mix(in srgb,var(--c) 16%,#fff);color:#3a4a40;border:1px solid color-mix(in srgb,var(--c) 32%,#fff);}
+.chip.fert{background:color-mix(in srgb,var(--fert) 13%,#fff);border:1px dashed var(--fert);color:#6b4d00;}
+.chip.fert2{background:color-mix(in srgb,var(--fert2) 13%,#fff);border:1px dashed var(--fert2);color:#3a5863;}
+.none{color:var(--muted);font-size:13px;}
+.flower-list{display:flex;flex-direction:column;gap:8px;}
+.fcard{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:14px;padding:12px;box-shadow:var(--shadow);}
+.fi{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:11px;font-size:20px;flex:0 0 auto;background-size:contain;background-position:center;background-color:var(--card);background-repeat:no-repeat;box-shadow:inset 0 0 0 1px rgba(0,0,0,.04),0 1px 2px rgba(0,0,0,.06);overflow:hidden;}
+.fi.big{width:58px;height:58px;font-size:24px;border-radius:14px;}
+.fi.fallback{font-size:22px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.18);box-shadow:inset 0 0 0 1px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.08);}
+.finfo{flex:1;min-width:0;}
+.fname{font-weight:700;font-size:15px;}
+.flast{font-size:12px;color:var(--muted);margin-top:3px;}
+.flast span{display:inline-block;margin-right:10px;}
+.stat-cards{display:flex;gap:10px;margin-bottom:14px;}
+.sc{flex:1;background:var(--card);border-radius:14px;padding:16px 8px;text-align:center;box-shadow:var(--shadow);}
+.scn{font-size:26px;font-weight:800;color:var(--primary);}
+.scn.fert{color:var(--fert);}
+.scn.fert2{color:var(--fert2);}
+.scl{font-size:12px;color:var(--muted);margin-top:4px;}
+.bars{background:var(--card);border-radius:14px;padding:14px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:11px;}
+.bar-row{display:flex;align-items:center;gap:8px;font-size:13px;}
+.bar-name{flex:0 0 116px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-track{flex:1;height:10px;background:var(--line);border-radius:6px;overflow:hidden;}
+.bar-fill{display:block;height:100%;border-radius:6px;}
+.bar-num{flex:0 0 22px;text-align:right;color:var(--muted);}
+.tabbar{position:fixed;bottom:0;left:0;right:0;display:flex;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:8px 0 calc(env(safe-area-inset-bottom) + 6px);z-index:20;}
+.tabbar button{flex:1;border:none;background:none;color:var(--muted);font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.tabbar button .ic{font-size:21px;}
+.tabbar button.active{color:var(--primary);}
+.overlay{position:fixed;inset:0;background:rgba(20,30,25,.4);opacity:0;visibility:hidden;transition:.25s;z-index:30;}
+.overlay.open{opacity:1;visibility:visible;}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom) + 20px);transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1);z-index:31;max-height:82vh;overflow-y:auto;}
+.sheet.open{transform:translateY(0);}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:16px;margin-bottom:6px;}
+.sheet-head .x{border:none;background:var(--line);width:30px;height:30px;border-radius:50%;font-size:14px;color:var(--muted);}
+.sheet-legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-bottom:12px;}
+.sheet-legend span{display:flex;align-items:center;gap:4px;}
+.leg-dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+.leg-dot.w{background:var(--primary);}
+.leg-dot.f{background:var(--fert);}
+.leg-dot.f2{background:var(--fert2);}
+.sheet-body{display:flex;flex-direction:column;gap:8px;}
+.flower-toggle{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;border:1.5px solid var(--line);background:#fafbfa;}
+.flower-toggle .fi{width:34px;height:34px;font-size:18px;}
+.flower-toggle .fn{flex:1;font-weight:600;font-size:15px;min-width:0;}
+.action-btn{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);background:#fff;font-size:12px;display:inline-flex;align-items:center;justify-content:center;transition:.15s;margin-left:4px;flex:0 0 auto;font-weight:700;}
+.action-btn:active{transform:scale(.92);}
+.action-btn.water.on{border-color:var(--primary);background:var(--primary);color:#fff;}
+.action-btn.fert1.on{border-color:var(--fert);background:var(--fert);color:#fff;}
+.action-btn.fert2.on{border-color:var(--fert2);background:var(--fert2);color:#fff;}
+.hidden{display:none !important;}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-title">🌿 养护记录</div>
+  <div class="h-year">
+    <button id="yprev" aria-label="上一年">‹</button>
+    <span id="yearLabel">2026</span>
+    <button id="ynext" aria-label="下一年">›</button>
+  </div>
+</header>
+
+<main>
+  <section id="view-calendar">
+    <div id="monthStat" class="month-stat"></div>
+    <div id="monthTabs" class="month-tabs"></div>
+    <div id="dayList" class="day-list"></div>
+  </section>
+  <section id="view-flowers" class="hidden"><div id="flowerList" class="flower-list"></div></section>
+  <section id="view-stats" class="hidden"><div id="statsEl"></div></section>
+</main>
+
+<div class="tabbar">
+  <button data-v="calendar" class="active"><span class="ic">📅</span>日历</button>
+  <button data-v="flowers"><span class="ic">🌱</span>花卉</button>
+  <button data-v="stats"><span class="ic">📊</span>统计</button>
+</div>
+
+<div id="overlay" class="overlay"></div>
+<div id="sheet" class="sheet"></div>
+
+<script>
+const FLOWERS = [
+  {name:"油画女郎",     icon:"🌹", color:"#e888b0", photo:"flowers/油画女郎.png"},
+  {name:"大白月光",     icon:"🌕", color:"#cdd9e8", photo:"flowers/大白月光.png"},
+  {name:"小白月光",     icon:"🌙", color:"#bcd0e8", photo:"flowers/小白月光.png"},
+  {name:"苹果花",       icon:"🌸", color:"#f6b8c8", photo:"flowers/苹果花.png"},
+  {name:"幻想曲",       icon:"🎵", color:"#b3a0e0", photo:"flowers/幻想曲.png"},
+  {name:"玛菲特/甜心",  icon:"💗", color:"#ff9fb6", photo:"flowers/玛菲特_甜心.png"},
+  {name:"猩红玛丽",     icon:"🌺", color:"#d8442f", photo:"flowers/猩红玛丽.png"},
+  {name:"yu泰",         icon:"🌿", color:"#86c08a", photo:"flowers/yu泰.png"},
+  {name:"粉色飞溅",     icon:"💮", color:"#ff95c0", photo:"flowers/粉色飞溅.png"},
+  {name:"安妮",         icon:"🌷", color:"#f2b3cf", photo:"flowers/安妮.png"},
+  {name:"粉旗鱼",       icon:"🐟", color:"#ff86a8", photo:"flowers/粉旗鱼.png"},
+  {name:"抹茶巧克力",   icon:"🍵", color:"#9cc46f", photo:"flowers/抹茶巧克力.png"},
+  {name:"四小只",       icon:"🐤", color:"#ffd28a", photo:null},
+  {name:"ROSE",         icon:"🌹", color:"#c23b2b", photo:"flowers/ROSE.png"},
+  {name:"莲叶",         icon:"🪷", color:"#76ad5e", photo:"flowers/莲叶.png"},
+];
+const WEEK = ["周日","周一","周二","周三","周四","周五","周六"];
+const WATER_KEY = "flowerWaterRecords_v1";
+const FERT1_KEY = "flowerFert1Records_v1";
+const FERT2_KEY = "flowerFert2Records_v1";
+const OLD_FERT_KEY = "flowerFertilizerRecords_v1";
+
+let state = { year: new Date().getFullYear(), month: new Date().getMonth(), view:"calendar" };
+let waters = loadW();
+let fert1s = loadF1();
+let fert2s = loadF2();
+
+function loadW(){ try{ return JSON.parse(localStorage.getItem(WATER_KEY))||{}; }catch(e){ return {}; } }
+function saveW(){ localStorage.setItem(WATER_KEY, JSON.stringify(waters)); }
+function loadF1(){ try{ return JSON.parse(localStorage.getItem(FERT1_KEY))||{}; }catch(e){ return {}; } }
+function saveF1(){ localStorage.setItem(FERT1_KEY, JSON.stringify(fert1s)); }
+function loadF2(){ try{ return JSON.parse(localStorage.getItem(FERT2_KEY))||{}; }catch(e){ return {}; } }
+function saveF2(){ localStorage.setItem(FERT2_KEY, JSON.stringify(fert2s)); }
+
+/* Migrate old fertilize data to 花多多1号 (one-time) */
+(function migrateOldFert(){
+  const old = localStorage.getItem(OLD_FERT_KEY);
+  if(!old) return;
+  try{
+    const data = JSON.parse(old);
+    if(Object.keys(data).length && !localStorage.getItem(FERT1_KEY)){
+      fert1s = data;
+      saveF1();
+    }
+    localStorage.removeItem(OLD_FERT_KEY);
+  }catch(e){ localStorage.removeItem(OLD_FERT_KEY); }
+})();
+function dateKey(y,m,d){ return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+function flowerOf(name){ return FLOWERS.find(f=>f.name===name); }
+
+/* Render flower icon: photo if available, else emoji with colored background */
+function flowerIcon(f, big=false){
+  const sizeCls = big ? 'big' : '';
+  if(f.photo){
+    return `<span class="fi ${sizeCls}" style="background-image:url('${f.photo}')" role="img" aria-label="${f.name}"></span>`;
+  }
+  return `<span class="fi ${sizeCls} fallback" style="background:${f.color}">${f.icon}</span>`;
+}
+
+const monthTabs = document.getElementById('monthTabs');
+const dayList = document.getElementById('dayList');
+const monthStat = document.getElementById('monthStat');
+
+function renderCalendar(){
+  let tabs='';
+  for(let m=0;m<12;m++){
+    tabs += `<button class="mtab ${m===state.month?'active':''}" data-m="${m}">${m+1}月</button>`;
+  }
+  monthTabs.innerHTML = tabs;
+  monthTabs.querySelectorAll('.mtab').forEach(b=>{
+    b.onclick = ()=>{ state.month = +b.dataset.m; renderCalendar(); };
+  });
+  renderDays();
+}
+
+function renderDays(){
+  const y=state.year, m=state.month;
+  const dim = new Date(y, m+1, 0).getDate();
+  const today = new Date();
+  let html='';
+  for(let d=1; d<=dim; d++){
+    const key = dateKey(y,m,d);
+    const w = waters[key] || [];
+    const f1 = fert1s[key] || [];
+    const f2 = fert2s[key] || [];
+    const dt = new Date(y,m,d);
+    const isToday = (y===today.getFullYear() && m===today.getMonth() && d===today.getDate());
+    let chips = '';
+    w.forEach(n=>{ const f=flowerOf(n); chips += `<span class="chip" style="--c:${f.color}">💧${f.name}</span>`; });
+    f1.forEach(n=>{ const f=flowerOf(n); chips += `<span class="chip fert">🌿1 ${f.name}</span>`; });
+    f2.forEach(n=>{ const f=flowerOf(n); chips += `<span class="chip fert2">🌿2 ${f.name}</span>`; });
+    if(!chips) chips = `<span class="none">未记录</span>`;
+    html += `<div class="day ${isToday?'today':''}" data-key="${key}">
+      <div class="dleft"><div class="dd">${y}/${m+1}/${d}</div><div class="dw">${WEEK[dt.getDay()]}</div></div>
+      <div class="dright">${chips}</div>
+    </div>`;
+  }
+  dayList.innerHTML = html;
+  dayList.querySelectorAll('.day').forEach(el=> el.onclick = ()=> openDaySheet(el.dataset.key));
+  const rd = Array.from({length:dim},(_,i)=>dateKey(y,m,i+1))
+    .filter(k=>(waters[k]&&waters[k].length)||(fert1s[k]&&fert1s[k].length)||(fert2s[k]&&fert2s[k].length)).length;
+  monthStat.textContent = `${y}年${m+1}月 · 已养护 ${rd} 天`;
+}
+
+/* ---------- Day sheet (dual-toggle: water + fertilize) ---------- */
+const sheet = document.getElementById('sheet');
+const overlay = document.getElementById('overlay');
+
+function openDaySheet(key){
+  const w = waters[key] || [];
+  const f1 = fert1s[key] || [];
+  const f2 = fert2s[key] || [];
+  const dt = new Date(key);
+  const title = `${dt.getFullYear()}年${dt.getMonth()+1}月${dt.getDate()}日 ${WEEK[dt.getDay()]}`;
+  let html = `<div class="sheet-head"><span>${title}</span><button class="x" onclick="closeSheet()">✕</button></div>
+    <div class="sheet-legend"><span><span class="leg-dot w"></span> 浇水</span><span><span class="leg-dot f"></span> 花1</span><span><span class="leg-dot f2"></span> 花2</span></div>
+    <div class="sheet-body">`;
+  FLOWERS.forEach(f=>{
+    const wOn = w.includes(f.name);
+    const f1On = f1.includes(f.name);
+    const f2On = f2.includes(f.name);
+    html += `<div class="flower-toggle" data-name="${f.name}">
+      ${flowerIcon(f)}
+      <span class="fn">${f.name}</span>
+      <button class="action-btn water ${wOn?'on':''}" data-act="w">💧</button>
+      <button class="action-btn fert1 ${f1On?'on':''}" data-act="f1">①</button>
+      <button class="action-btn fert2 ${f2On?'on':''}" data-act="f2">②</button>
+    </div>`;
+  });
+  html += `</div>`;
+  sheet.innerHTML = html;
+  sheet.classList.add('open');
+  overlay.classList.add('open');
+  sheet.querySelectorAll('.flower-toggle').forEach(row=>{
+    const name = row.dataset.name;
+    row.querySelectorAll('.action-btn').forEach(btn=>{
+      btn.addEventListener('click',(e)=>{
+        e.stopPropagation();
+        const act = btn.dataset.act;
+        if(act==='w') toggleWater(key, name);
+        else if(act==='f1') toggleFert1(key, name);
+        else if(act==='f2') toggleFert2(key, name);
+        btn.classList.toggle('on');
+      });
+    });
+  });
+}
+function closeSheet(){ sheet.classList.remove('open'); overlay.classList.remove('open'); }
+overlay.onclick = closeSheet;
+
+function toggleWater(key, name){
+  if(!waters[key]) waters[key]=[];
+  const i = waters[key].indexOf(name);
+  if(i>=0) waters[key].splice(i,1); else waters[key].push(name);
+  if(waters[key].length===0) delete waters[key];
+  saveW(); refreshActiveView();
+}
+function toggleFert1(key, name){
+  if(!fert1s[key]) fert1s[key]=[];
+  const i = fert1s[key].indexOf(name);
+  if(i>=0) fert1s[key].splice(i,1); else fert1s[key].push(name);
+  if(fert1s[key].length===0) delete fert1s[key];
+  saveF1(); refreshActiveView();
+}
+function toggleFert2(key, name){
+  if(!fert2s[key]) fert2s[key]=[];
+  const i = fert2s[key].indexOf(name);
+  if(i>=0) fert2s[key].splice(i,1); else fert2s[key].push(name);
+  if(fert2s[key].length===0) delete fert2s[key];
+  saveF2(); refreshActiveView();
+}
+function refreshActiveView(){
+  if(state.view==='calendar') renderDays();
+  else if(state.view==='flowers') renderFlowers();
+  else renderStats();
+}
+
+/* ---------- Flowers view ---------- */
+const flowerList = document.getElementById('flowerList');
+function renderFlowers(){
+  let html='';
+  FLOWERS.forEach(f=>{
+    let wLast=null, wTotal=0, f1Last=null, f1Total=0, f2Last=null, f2Total=0;
+    for(const k in waters){ if(waters[k].includes(f.name)){ wTotal++; if(!wLast||k>wLast) wLast=k; } }
+    for(const k in fert1s){ if(fert1s[k].includes(f.name)){ f1Total++; if(!f1Last||k>f1Last) f1Last=k; } }
+    for(const k in fert2s){ if(fert2s[k].includes(f.name)){ f2Total++; if(!f2Last||k>f2Last) f2Last=k; } }
+    let wTxt = wLast ? `${wLast.slice(5).replace('-','/')}` : '—';
+    let f1Txt = f1Last ? `${f1Last.slice(5).replace('-','/')}` : '—';
+    let f2Txt = f2Last ? `${f2Last.slice(5).replace('-','/')}` : '—';
+    html += `<div class="fcard">
+      ${flowerIcon(f, true)}
+      <div class="finfo"><div class="fname">${f.name}</div>
+        <div class="flast"><span>💧 ${wTxt} · ${wTotal}次</span><span style="color:var(--fert)">① ${f1Txt} · ${f1Total}次</span><span style="color:var(--fert2)">② ${f2Txt} · ${f2Total}次</span></div>
+      </div>
+    </div>`;
+  });
+  flowerList.innerHTML = html;
+}
+
+/* ---------- Stats view ---------- */
+const statsEl = document.getElementById('statsEl');
+function computeStreak(rec1, rec2){
+  /* combined: a day counts if EITHER fert type was applied */
+  let cur = new Date();
+  let key = dateKey(cur.getFullYear(), cur.getMonth(), cur.getDate());
+  const hasRec = (k)=>((rec1[k]&&rec1[k].length)||(rec2[k]&&rec2[k].length));
+  if(!hasRec(key)){ cur.setDate(cur.getDate()-1); key = dateKey(cur.getFullYear(), cur.getMonth(), cur.getDate()); }
+  let s=0;
+  while(hasRec(key)){ s++; cur.setDate(cur.getDate()-1); key = dateKey(cur.getFullYear(), cur.getMonth(), cur.getDate()); }
+  return s;
+}
+function renderStats(){
+  const y = state.year;
+  let wTotal=0, f1Total=0, f2Total=0, wDays=0, f1Days=0, f2Days=0;
+  const perfW={}, perfF1={}, perfF2={}; FLOWERS.forEach(f=>{ perfW[f.name]=0; perfF1[f.name]=0; perfF2[f.name]=0; });
+  for(const k in waters){
+    if(k.startsWith(String(y)+'-') && waters[k] && waters[k].length){
+      wDays++; waters[k].forEach(n=>{ wTotal++; if(perfW[n]!=null) perfW[n]++; });
+    }
+  }
+  for(const k in fert1s){
+    if(k.startsWith(String(y)+'-') && fert1s[k] && fert1s[k].length){
+      f1Days++; fert1s[k].forEach(n=>{ f1Total++; if(perfF1[n]!=null) perfF1[n]++; });
+    }
+  }
+  for(const k in fert2s){
+    if(k.startsWith(String(y)+'-') && fert2s[k] && fert2s[k].length){
+      f2Days++; fert2s[k].forEach(n=>{ f2Total++; if(perfF2[n]!=null) perfF2[n]++; });
+    }
+  }
+  const streakW = computeStreak(waters, {});
+  const streakF = computeStreak(fert1s, fert2s);
+
+  /* top summary cards */
+  statsEl.innerHTML = `<div class="stat-cards" style="flex-wrap:wrap;">
+    <div class="sc"><div class="scn">${wTotal}</div><div class="scl">浇水次数</div></div>
+    <div class="sc"><div class="scn fert">${f1Total}</div><div class="scl">花多多1号</div></div>
+    <div class="sc"><div class="scn fert2">${f2Total}</div><div class="scl">花多多2号</div></div>
+    <div class="sc"><div class="scn">${wDays}</div><div class="scl">浇水天数</div></div>
+    <div class="sc"><div class="scn fert">${f1Days}</div><div class="scl">花1天数</div></div>
+    <div class="sc"><div class="scn fert2">${f2Days}</div><div class="scl">花2天数</div></div>
+    <div class="sc"><div class="scn">${streakW}</div><div class="scl">浇水连续</div></div>
+    <div class="sc"><div class="scn fert">${streakF}</div><div class="scl">施肥连续</div></div>
+  </div>`;
+
+  /* watering bars */
+  const maxW = Math.max(1, ...Object.values(perfW));
+  let wBars = FLOWERS.map(f=>`<div class="bar-row">
+    <span class="bar-name">${f.icon}${f.name}</span>
+    <span class="bar-track"><span class="bar-fill" style="width:${perfW[f.name]/maxW*100}%;background:${f.color}"></span></span>
+    <span class="bar-num">${perfW[f.name]}</span>
+  </div>`).join('');
+
+  /* 花多多1号 bars */
+  const maxF1 = Math.max(1, ...Object.values(perfF1));
+  let f1Bars = FLOWERS.map(f=>`<div class="bar-row">
+    <span class="bar-name">${f.icon}${f.name}</span>
+    <span class="bar-track"><span class="bar-fill" style="width:${perfF1[f.name]/maxF1*100}%;background:var(--fert)"></span></span>
+    <span class="bar-num">${perfF1[f.name]}</span>
+  </div>`).join('');
+
+  /* 花多多2号 bars */
+  const maxF2 = Math.max(1, ...Object.values(perfF2));
+  let f2Bars = FLOWERS.map(f=>`<div class="bar-row">
+    <span class="bar-name">${f.icon}${f.name}</span>
+    <span class="bar-track"><span class="bar-fill" style="width:${perfF2[f.name]/maxF2*100}%;background:var(--fert2)"></span></span>
+    <span class="bar-num">${perfF2[f.name]}</span>
+  </div>`).join('');
+
+  statsEl.innerHTML += `<div class="bars"><div style="font-weight:700;font-size:14px;margin-bottom:4px;">💧 浇水排行</div>${wBars}</div>
+    <div class="bars" style="margin-top:10px;"><div style="font-weight:700;font-size:14px;margin-bottom:4px;color:var(--fert)">① 花多多1号排行</div>${f1Bars}</div>
+    <div class="bars" style="margin-top:10px;"><div style="font-weight:700;font-size:14px;margin-bottom:4px;color:var(--fert2)">② 花多多2号排行</div>${f2Bars}</div>`;
+}
+
+/* ---------- View switching ---------- */
+const views = { calendar:document.getElementById('view-calendar'), flowers:document.getElementById('view-flowers'), stats:document.getElementById('view-stats') };
+document.querySelectorAll('.tabbar button').forEach(b=>{
+  b.onclick = ()=>{
+    state.view = b.dataset.v;
+    document.querySelectorAll('.tabbar button').forEach(x=>x.classList.toggle('active', x===b));
+    for(const k in views) views[k].classList.toggle('hidden', k!==state.view);
+    if(state.view==='calendar') renderCalendar();
+    else if(state.view==='flowers') renderFlowers();
+    else renderStats();
+  };
+});
+
+/* ---------- Year control ---------- */
+document.getElementById('yprev').onclick = ()=>{ state.year--; updateYear(); };
+document.getElementById('ynext').onclick = ()=>{ state.year++; updateYear(); };
+function updateYear(){
+  document.getElementById('yearLabel').textContent = state.year;
+  if(state.view==='calendar') renderCalendar();
+  else if(state.view==='flowers') renderFlowers();
+  else renderStats();
+}
+
+/* ---------- Init ---------- */
+document.getElementById('yearLabel').textContent = state.year;
+renderCalendar();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=> navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
